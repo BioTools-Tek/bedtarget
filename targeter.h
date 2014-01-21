@@ -31,7 +31,9 @@ public:
         this->frames = args.exonframes;
         this->direction = args.direction;
 
-        if(args.promoter_margin!=-1) targetPromoters(args.promoter_margin); // targets genes only
+        if(args.promoter_margin_downstream!=-1) targetPromoters(\
+                    args.promoter_margin_downstream,\
+                    args.promoter_margin_upstream); // targets genes only
 
         if(args.intergenic) targetIntergenic(args.codingonly);
 
@@ -85,7 +87,7 @@ public:
     void targetUTRRegions();                  //'
     void targetSpliceOnly(Splice *ss, bool no_utr=true);        //'
     void targetSpliceUTR(Splice *ss);         //'
-    void targetPromoters(short margin_ds);
+    void targetPromoters(short margin_ds, short margin_us);
 
     //Other jobs
     void sortedList();

@@ -1,7 +1,7 @@
 #include "targeter.h"
 
 
-void Targeter::targetPromoters(short margin_ds){
+void Targeter::targetPromoters(short margin_ds, short margin_us){
     QList<GeneHolder*> &genes = this->genelist;
 
     int gen_size = genes.size();
@@ -13,12 +13,21 @@ void Targeter::targetPromoters(short margin_ds){
         string chrom = gh->chrom.toStdString();
         string gene_name = gh->gene_name.toStdString();
 
-        //Region before
-        uint txStart_before = txStart - margin_ds;
 
-        cout << chrom << '\t'
-             << txStart_before << '\t' << txStart << '\t'
-             << gene_name << "|PROMOTER_" << margin_ds << endl;
+        //Region before
+        if (margin_ds!=-1){
+            uint txStart_before = txStart - margin_ds;
+            cout << chrom << '\t'
+                 << txStart_before << '\t' << txStart << '\t'
+             << gene_name << "|PROMOTER_" << margin_ds << "_DOWNSTREAM" << endl;
+        }
+
+        if(margin_us!=-1){
+            uint txStart_after = txStart + margin_us;
+            cout << chrom << '\t'
+                 << txStart << '\t' << txStart_after << '\t'
+             << gene_name << "|PROMOTER_" << margin_us << "_UPSTREAM" << endl;
+        }
     }
 }
 

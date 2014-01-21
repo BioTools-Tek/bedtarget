@@ -21,7 +21,7 @@ public:
     //Gene Args
     bool genes, exons, codingonly;
     bool introns, intergenic, scores, exonframes, direction;
-    short utrlevel, promoter_margin;
+    short utrlevel, promoter_margin_downstream, promoter_margin_upstream;
 
     Splice *ss;
 
@@ -37,7 +37,7 @@ public:
         scores=false; exonframes=false;
         direction=false;
 
-        promoter_margin = -1;
+        promoter_margin_downstream = promoter_margin_upstream = -1;
 
         int splice_amount = 0;
         bool splice_don = true, splice_acc = true;
@@ -98,12 +98,13 @@ public:
 
                 //Promoter margin opts Opts
                 else if(tmp=="--promoters") {
-                    if (argc <= i+1 || QString(argv[i+1]).toInt()==0 ){
-                        cerr << "Give a promoter value. Default is 500." << endl;
+                    if (argc <= i+2 || QString(argv[i+1]).toInt()==0 ){
+                        cerr << "Give downsream and upstream promoter values. Default is 5000 and 0." << endl;
                         exit(-1);
                     }
-                    promoter_margin = QString(argv[i+1]).toShort();
-                    okay_vars.append(argv[i+1]);
+                    promoter_margin_downstream = QString(argv[i+1]).toShort();
+                    promoter_margin_upstream = QString(argv[i+2]).toShort();
+                    okay_vars.append(argv[i+1]);okay_vars.append(argv[i+2]);
                     okay_vars.append(tmp);
                 }
 
@@ -144,9 +145,9 @@ public:
         if (genes && exons) assert("Either exons or genes, one or the other");
 
         if(!genes && !exons){ // Nothing specified
-            if(!introns && !intergenic && promoter_margin==-1){
+            if(!introns && !intergenic && promoter_margin_downstream==-1){
                 usage();
-//                assert("nothing specified");
+//              assert("nothing specified");
             }
         }
 
@@ -178,7 +179,7 @@ public:
         cerr << "\nGENE OPTIONS:" << endl;
         cerr << "   --utr" << endl;
         cerr << "   --utr-only" << endl;
-        cerr << "   --promoters <margin>" << endl;
+        cerr << "   --promoters <downstream_margin> <upstream_margin>" << endl;
         cerr << "   --include-noncoding" << endl;
         cerr << "   --introns" << endl;
         cerr << "   --intergenic" << endl;
