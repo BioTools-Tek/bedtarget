@@ -17,23 +17,18 @@ public:
     QList<GeneHolder*> genelist;
     bool scores, frames, direction;
 
-    QList<QChar> checks;
+
 
     Targeter(QList<GeneHolder*> &genelist, Args &args)
     {
-        checks.append('n');
-        checks.append('u');
-        checks.append('i');
-        checks.append('c');
-
         this->genelist = genelist;
         this->scores = args.scores;
         this->frames = args.exonframes;
         this->direction = args.direction;
 
         if(args.promoter_margin_downstream!=-1) targetPromoters(\
-                    args.promoter_margin_downstream,\
-                    args.promoter_margin_upstream); // targets genes only
+                    args.promoter_margin_upstream,\
+                    args.promoter_margin_downstream); // targets genes only
 
         if(args.intergenic) targetIntergenic(args.codingonly);
 
@@ -87,12 +82,12 @@ public:
     void targetUTRRegions();                  //'
     void targetSpliceOnly(Splice *ss, bool no_utr=true);        //'
     void targetSpliceUTR(Splice *ss);         //'
-    void targetPromoters(short margin_ds, short margin_us);
+    void targetPromoters(short margin_us, short margin_ds);
 
     //Other jobs
     void sortedList();
     void printList();
-    void printExtras(QChar &score1, QChar &score2, QChar myway=QChar('A'), short frame=-99);
+    void printExtras(GeneHolder *&gh, short frame=-99);
 
 };
 

@@ -42,8 +42,6 @@ class GeneHolder{
 
 public:
 
-    GeneHolder(QString name){gene_name = name;}
-    QString gene_name;
     bool direction;  // '+' '-'
     QString chrom;
 
@@ -61,8 +59,19 @@ public:
     QList<ExonHolder *> exons;
     QList<uint>  exon_numbers;
 
+    QList<QChar> checks;
+    QString gene_name;
+
     short reading_frames[500]; // Genes are very unlikely to have 500 exons, enough right?
     // http://biology.stackexchange.com/questions/29/what-are-the-limiting-factors-for-gene-length-and-number-of-exons
+
+    GeneHolder(QString name){
+        checks.append('n');
+        checks.append('u');
+        checks.append('i');
+        checks.append('c');
+        gene_name = name;
+    }
 
     uint determineExonNumber(uint exon){
         if (direction) return exon;
@@ -77,15 +86,42 @@ public:
         cerr << "Could not determine direction!" << endl;
         exit(-1);
     }
-};
 
+    void debuginfo(){
+        cout << " [strand=" << (direction?'+':'-') << ",txStart=" << txStart
+                                               << ",txStop=" << txStop << "]" << flush;
+    }
+
+    void printDetails(bool scores, bool givedirection){
+        if (scores){
+            //Append Quality
+            QList<QChar> &keys = checks;
+            cout << '\t' << flush;
+
+            if (score_start.isNull()){
+                cout << "noscore" << flush;
+            }
+            else{
+                if(keys.contains(score_start))  cout << score_start.toLatin1() << flush;
+                else cout << 'w' << flush;
+
+                if(keys.contains(score_endl))  cout << score_endl.toUpper().toLatin1() << flush;
+                else cout << 'W' << flush;
+            }
+        }
+        if (givedirection) cout << '\t' << (direction?'+':'-') << flush;
+    }
+
+};
 
 class GrabExons{
 public:
     QString database;
     QString table;
-    bool local;
     QString chrom;
+    QMap<QString, int> position_map;
+
+    bool local;
     int reg1, reg2;
 
     QMap<QString, QMap<QString, uint> > chromemap;
@@ -114,10 +150,14 @@ public:
         }
 
         QList<QString> data = retrieveFromMYSQL();
-        for (int i=0; i < data.size(); i++)
+
+
+        makePositionMap(data.at(0)); // Use header to get indexes
+
+        for (int i=1; i < data.size(); i++)
         {
             const QString &line = data.at(i);
-            if(line.length()<5) continue;
+            if(line.trimmed().length()<5) continue;
 
             GeneHolder *toast = parseExons(line);
             if (toast->chrom!="0") genes.append(toast);
@@ -127,6 +167,7 @@ public:
     QList<QString> retrieveFromMYSQL();
     uint isoformcheck(GeneHolder *gh);
     GeneHolder * parseExons(const QString &lines);
+    void makePositionMap(const QString &line);
 };
 
 

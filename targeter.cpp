@@ -1,7 +1,8 @@
 #include "targeter.h"
 
+#define SWAPPED "[SWAPPED]"
 
-void Targeter::targetPromoters(short margin_ds, short margin_us){
+void Targeter::targetPromoters(short margin_us, short margin_ds){
     QList<GeneHolder*> &genes = this->genelist;
 
     int gen_size = genes.size();
@@ -10,51 +11,84 @@ void Targeter::targetPromoters(short margin_ds, short margin_us){
         GeneHolder *gh = genes.at(i);
         uint txStart = gh->txStart;
 
+        bool direct = gh->direction;
+
+        // Promoters are found before transcription starts (in 5' or 3'), but UCSC does not list these
+        // in a very consistent way:
+        //    if -  txStart should be greater than txEnd
+        //    if +  txStart should be less than txEnd
+        // However what the tablebrowser seems to do for the most is to simply give the smaller upstream
+        // value as the txStart, regardless of orientation.
+        // Need to flag these.
+
+        bool flag_q_txS = false;
+        if ((direct) && (gh->txStart > gh->txStop)) flag_q_txS = true;
+        if ((!direct) && (gh->txStart < gh->txStop)){
+            flag_q_txS = true;
+            txStart = gh->txStop; // txStart is 3' end!
+        }
+
         string chrom = gh->chrom.toStdString();
         string gene_name = gh->gene_name.toStdString();
 
 
-        //Region before
-        if (margin_ds!=-1){
-            uint txStart_before = txStart - margin_ds;
-            cout << chrom << '\t'
-                 << txStart_before << '\t' << txStart << '\t'
-             << gene_name << "|PROMOTER_" << margin_ds << "_DOWNSTREAM" << endl;
+        // 5' --> 3'
+        if(direct){
+            //Region before
+            if (margin_us!=-1){
+                uint txStart_before = txStart - margin_us;
+                cout << chrom << '\t'
+                     << txStart_before << '\t' << txStart << '\t'
+                     << gene_name
+                     << "|5'_PROMOTER_" << margin_us << "bp_UPSTREAM"
+                     << (flag_q_txS?SWAPPED:"") << flush;
+                gh->printDetails(scores,direction); cout << endl;
+            }
+
+            //After, still 5'-->3'
+            if(margin_ds!=-1){
+                uint txStart_after = txStart + margin_ds;
+                cout << chrom << '\t' << txStart << '\t' << txStart_after << '\t'
+                 << gene_name
+                 << "|5'PROMOTER_" << margin_ds << "bp_DOWNSTREAM"
+                 << (flag_q_txS?SWAPPED:"") << flush;
+                gh->printDetails(scores,direction); cout << endl;
+
+            }
         }
 
-        if(margin_us!=-1){
-            uint txStart_after = txStart + margin_us;
-            cout << chrom << '\t'
-                 << txStart << '\t' << txStart_after << '\t'
-             << gene_name << "|PROMOTER_" << margin_us << "_UPSTREAM" << endl;
+        // 3' --> 5'
+        else {
+            //Region before
+            if (margin_us!=-1){
+                uint txStart_before = txStart + margin_ds;
+                cout << chrom << '\t'
+                     << txStart << '\t' << txStart_before << '\t'
+                     << gene_name
+                     << "|3'_PROMOTER_" << margin_us << "bp_UPSTREAM"
+                     << (flag_q_txS?SWAPPED:"") << flush;
+                gh->printDetails(scores,direction); cout << endl;
+            }
+
+            //After, still 3' <-- 5'
+            if(margin_ds!=-1){
+                uint txStart_after = txStart - margin_ds;
+                cout << chrom << '\t' << txStart_after  << '\t' << txStart << '\t'
+                 << gene_name
+                 << "|3'PROMOTER_" << margin_ds << "bp_DOWNSTREAM"
+                 << (flag_q_txS?SWAPPED:"") << flush;
+                gh->printDetails(scores,direction); cout << endl;
+            }
         }
     }
 }
 
 
-//Score is defined in grabexons
-
-void Targeter::printExtras(QChar &score1, QChar &score2, QChar myway, short frame){
-    if(this->scores){
-        //Append Quality
-        QList<QChar> &keys = checks;
-        cout << '\t' << flush;
-
-        if(keys.contains(score1))  cout << score1.toLatin1() << flush;
-        else cout << 'w' << flush;
-
-        if(keys.contains(score2))  cout << score2.toUpper().toLatin1() << flush;
-        else cout << 'W' << flush;
-    }
-
-    if (this->direction){
-        cout << '\t' << myway.toLatin1() << flush;
-    }
+void Targeter::printExtras(GeneHolder *&gh, short frame){
+    gh->printDetails(this->scores, this->direction);
 
     // -99 is null
-    if (this->frames){
-        cout << '\t' << frame << flush;
-    }
+    if (this->frames) cout << '\t' << frame << flush;
     cout << endl;
 }
 
@@ -80,7 +114,7 @@ void Targeter::targetExons()
                 cout << chrom << '\t'
                      << ex->start << '\t' << ex->stop << '\t'
                      << gene_name << '|'
-                     << Exn << gh->determineExonNumber(ex->exon) << flush; printExtras(gh->score_start,gh->score_endl, (gh->direction?'+':'-'), ex->frame);
+                     << Exn << gh->determineExonNumber(ex->exon) << flush; printExtras(gh, ex->frame);
             }
         }
     }
@@ -115,7 +149,7 @@ void Targeter::targetUTRExons()
                 if(ex->utr==5) cout << '_' << UTR5;
                 else cout << '_' << UTR3;
 
-                cout << flush; printExtras(gh->score_start,gh->score_endl, (gh->direction?'+':'-'), ex->frame);
+                cout << flush; printExtras(gh, ex->frame);
             }
         }
     }
@@ -136,12 +170,12 @@ void Targeter::targetUTRRegions()
         cout << chrom << '\t'
              << gh->txStart << '\t' << gh->cdsStart
              << '\t' << gene_name  << '|'
-             << (gh->direction?UTR5:UTR3) << flush;printExtras(gh->score_start,gh->score_endl);
+             << (gh->direction?UTR5:UTR3) << flush;printExtras(gh);
 
         cout << chrom << '\t'
              << gh->cdsStop << '\t' << gh->txStop
              << '\t' << gene_name  << '|'
-             << (gh->direction?UTR5:UTR3) << flush; printExtras(gh->score_start,gh->score_endl);
+             << (gh->direction?UTR5:UTR3) << flush; printExtras(gh);
 
     }
 }
@@ -178,7 +212,7 @@ void Targeter::targetIntergenic(bool codingOnly)
             cout << last_genepos << '\t' << tmp_start
                  << '\t' << last_gene.toUtf8().data() << '-' << gh->gene_name.toUtf8().data() << flush;
         }
-        cout << '|' << Ing << flush; printExtras(gh->score_start,gh->score_endl);
+        cout << '|' << Ing << flush; printExtras(gh);
 
         last_genepos = tmp_stop;
         last_gene = gh->gene_name;
@@ -202,7 +236,7 @@ void Targeter::targetGenes(bool codingOnly)
         cout << gh->chrom.toUtf8().data() << '\t'
              << tmp_start << '\t' << tmp_stop  << '\t'
              << gh->gene_name.toUtf8().data()
-             << flush; printExtras(gh->score_start,gh->score_endl);
+             << flush; printExtras(gh);
     }
 }
 
@@ -275,13 +309,13 @@ void Targeter::targetSpliceOnly(Splice *ss, bool no_utr)
                     cout << chrom << '\t'
                          << splice1_start << '\t' << splice1_end << '\t'
                          << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh->score_start,gh->score_endl, (gh->direction?'+':'-'), ex->frame);
+                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh, ex->frame);
                 }
                 if(ss->acceptor_sites){
                     cout << chrom << '\t'
                          << splice2_start << '\t' << splice2_end << '\t'
                          << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh->score_start,gh->score_endl, (gh->direction?'+':'-'), ex->frame);
+                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh, ex->frame);
                 }
             }
             else{
@@ -289,13 +323,13 @@ void Targeter::targetSpliceOnly(Splice *ss, bool no_utr)
                     cout << chrom << '\t'
                          << splice1_start << '\t' << splice1_end << '\t'
                          << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh->score_start,gh->score_endl, (gh->direction?'+':'-'), ex->frame);
+                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh, ex->frame);
                 }
                 if(ss->donor_sites){
                     cout << chrom << '\t'
                          << splice2_start << '\t' << splice2_end << '\t'
                          << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh->score_start,gh->score_endl, (gh->direction?'+':'-'), ex->frame);
+                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh, ex->frame);
                 }
             }
         }
@@ -335,7 +369,7 @@ void Targeter::targetIntrons(Splice *ss)
             cout << chrom << '\t'
                  << last_exonpos << '\t' << splice1_start << '\t'
                  << gene_name << '|'
-                 << Itr << (gh->determineExonNumber(ex->exon)-1) << flush; printExtras(gh->score_start,gh->score_endl, (gh->direction?'+':'-'), ex->frame);
+                 << Itr << (gh->determineExonNumber(ex->exon)-1) << flush; printExtras(gh, ex->frame);
         }
     }
 }

@@ -98,7 +98,7 @@ public:
 
                 //Promoter margin opts Opts
                 else if(tmp=="--promoters") {
-                    if (argc <= i+2 || QString(argv[i+1]).toInt()==0 ){
+                    if (argc <= i+2 ){
                         cerr << "Give downsream and upstream promoter values. Default is 5000 and 0." << endl;
                         exit(-1);
                     }

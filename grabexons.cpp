@@ -21,11 +21,20 @@ QList<QString> GrabExons::retrieveFromMYSQL()
     QProcess *qp = new QProcess; //Not a child process.
     qp->start(command);
     qp->waitForFinished(90000);
-
     QString all_data = qp->readAllStandardOutput();
+
     QList<QString> tmp = all_data.split('\n');
 
     return tmp;
+}
+
+void GrabExons::makePositionMap(const QString &line){
+    QStringList tokes = line.trimmed().split('\t');
+    for (int t=0; t < tokes.length(); t++) {
+        position_map[tokes.at(t).trimmed()] = t;
+//        cerr << tokes.at(t).toUtf8().data() << "  " << t << endl;
+    }
+//    exit(-1);
 }
 
 
@@ -34,37 +43,41 @@ GeneHolder *GrabExons::parseExons(const QString &lines)
     QStringList data = lines.split('\t');
     // chrom=2, strand=3, exonCount=8, starts=9,ends=10, name2=12, exonFrames=15, startstat=13, endstat=14
     //THESE FIELDS ARE NEEDED AS DESCRIBED HERE https://lists.soe.ucsc.edu/pipermail/genome/2006-November/012218.html
-    QStringList startsR = data.at(9).split(','), endsR = data.at(10).split(','), framesR = data.at(15).split(',');
+    QStringList startsR = data.at(position_map["exonStarts"]).split(',');
+    QStringList endsR = data.at(position_map["exonEnds"]).split(',');
 
-    GeneHolder *gh = new GeneHolder(data.at(12).trimmed()); //Name
+    QStringList framesR;
+    if (position_map.contains("exonFrames"))
+         framesR = data.at(position_map["exonFrames"]).split(',');
 
-    if (gh->gene_name=="name2"){
-        gh->chrom="0";
-        return gh;
-    }
+    GeneHolder *gh = 0;
+    if (position_map.contains("name2"))
+        gh = new GeneHolder(data.at(position_map["name2"]).trimmed()); //Name
+    else
+        gh = new GeneHolder(data.at(position_map["name"]).trimmed()); //Name
+
+    //name	chrom	strand txStart	txEnd	cdsStart cdsEnd	exonCount	exonStarts exonEnds	proteinID	alignID
 
     //Coding region
-    gh->cdsStart = data.at(6).toInt();
-    gh->cdsStop = data.at(7).toInt();
+    gh->cdsStart = data.at(position_map["cdsStart"]).toInt();
+    gh->cdsStop = data.at(position_map["cdsEnd"]).toInt();
 
-    gh->txStart = data.at(4).toInt();
-    gh->txStop  = data.at(5).toInt();
+    gh->txStart = data.at(position_map["txStart"]).toInt();
+    gh->txStop  = data.at(position_map["txEnd"]).toInt();
 
-    gh->exonCount = data.at(8).toInt();
-    gh->direction = ((data.at(3).trimmed()).at(0)=='+');
-    gh->chrom = data.at(2).trimmed();
+    gh->exonCount = data.at(position_map["exonCount"]).toInt();
+    gh->direction = ((data.at(position_map["strand"]).trimmed()).at(0)=='+');
+    gh->chrom = data.at(position_map["chrom"]).trimmed();
 
     //Parse reading frames
-    for (int p=0; p< framesR.size(); p++){
+    for (int p=0; p< framesR.size(); p++)
         gh->reading_frames[p] = QString(framesR[p]).toShort();
-    }
 
 
     if(startsR.length() != endsR.length()){
-        cerr << "starts and ends length dont match" << endl;
+        cerr << "starts and ends lengths dont match" << endl;
         exit(-1);
     }
-
 
 
     QList<ExonHolder*> exons;
@@ -123,10 +136,10 @@ GeneHolder *GrabExons::parseExons(const QString &lines)
     }
 
     //Scores
-    gh->score_start = data.at(13).trimmed().at(0);
-    gh->score_endl = data.at(14).trimmed().at(0);
-//    cerr << gh->score_start.toLatin1() << ',' << gh->score_endl.toLatin1() << endl;
-
+    if (position_map.contains("cdsStartStat")){
+        gh->score_start = data.at(position_map["cdsStartStat"]).trimmed().at(0);
+        gh->score_endl  = data.at(position_map["cdsEndStat"]).trimmed().at(0);
+    }
     gh->exons = exons;                //Not a reference
 
     //Determine unique exon numbers
