@@ -19,8 +19,13 @@ QList<QString> GrabExons::retrieveFromMYSQL()
 
     //Process and get output
     QProcess *qp = new QProcess; //Not a child process.
+
+#ifdef DEBUG
+    cerr << command.toUtf8().data() << endl;
+#endif
+
     qp->start(command);
-    qp->waitForFinished(90000);
+    qp->waitForFinished(900000);
     QString all_data = qp->readAllStandardOutput();
 
     QList<QString> tmp = all_data.split('\n');

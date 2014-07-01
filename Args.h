@@ -1,7 +1,7 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#define VERSION "1.9a"
+#define VERSION "1.9b"
 
 #include <QString>
 #include <iostream>
@@ -171,7 +171,7 @@ public:
 
     void usage(){
         cerr << "version " << VERSION << endl;
-        cerr << "\nusage:" << "bedtarget2 " << "<chrN> [MAP OPTIONS] [GENE OPTIONS]" << endl;
+        cerr << "\nusage:" << "bedtarget2 " << "<chrN[:reg1-reg2]> [OPTIONS [MAP GENE]]" << endl;
         cerr << "\nMAP OPTIONS:" << endl;
         cerr << "   --database [hg18|hg19|etc]" << endl;
         cerr << "   --table [refGene]" << endl;

@@ -1,6 +1,9 @@
 #ifndef GRABEXONS_H
 #define GRABEXONS_H
 
+//#define DEBUG
+
+
 #include <QProcess>
 #include <qstring.h>
 #include <QList>
