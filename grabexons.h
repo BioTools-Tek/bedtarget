@@ -1,7 +1,7 @@
 #ifndef GRABEXONS_H
 #define GRABEXONS_H
 
-//#define DEBUG
+#define DEBUG
 
 
 #include <QProcess>

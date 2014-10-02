@@ -25,8 +25,10 @@ QList<QString> GrabExons::retrieveFromMYSQL()
 #endif
 
     qp->start(command);
-    qp->waitForFinished(900000);
+    qp->waitForFinished(900000000);
     QString all_data = qp->readAllStandardOutput();
+
+    cerr << all_data.toUtf8().data() << endl;
 
     QList<QString> tmp = all_data.split('\n');
 
