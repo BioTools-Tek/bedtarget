@@ -22,44 +22,44 @@ public:
     Targeter(QList<GeneHolder*> &genelist, Args &args)
     {
         this->genelist = genelist;
-        this->scores = args.scores;
-        this->frames = args.exonframes;
-        this->direction = args.direction;
+        this->scores = args.opt_arg.scores;
+        this->frames = args.opt_arg.exonframes;
+        this->direction = args.opt_arg.direction;
 
-        if(args.promoter_margin_downstream!=-1) targetPromoters(\
-                    args.promoter_margin_upstream,\
-                    args.promoter_margin_downstream); // targets genes only
+        if(args.opt_arg.promoter_margin_downstream!=-1) targetPromoters(\
+                    args.opt_arg.promoter_margin_upstream,\
+                    args.opt_arg.promoter_margin_downstream); // targets genes only
 
-        if(args.intergenic) targetIntergenic(args.codingonly);
+        if(args.opt_arg.intergenic) targetIntergenic(args.opt_arg.codingonly);
 
-        if(args.introns) targetIntrons(args.ss);
+        if(args.opt_arg.introns) targetIntrons(args.opt_arg.ss);
 
 
-        if(args.genes){
+        if(args.opt_arg.genes){
 
-            if(args.utrlevel == 0) targetGenes(args.codingonly);
-            else if(args.utrlevel == 1) {
-                targetGenes(args.codingonly);
+            if(args.opt_arg.utrlevel == 0) targetGenes(args.opt_arg.codingonly);
+            else if(args.opt_arg.utrlevel == 1) {
+                targetGenes(args.opt_arg.codingonly);
                 targetUTRRegions();
             }
-            else if(args.utrlevel == 2) targetUTRRegions();
+            else if(args.opt_arg.utrlevel == 2) targetUTRRegions();
         }
 
-        if(args.exons){
-            if(args.ss->splice_site!=0) {
-                if (args.utrlevel == 1) targetSpliceOnly(args.ss,false); //no_utr=false
-                else targetSpliceOnly(args.ss); //no_utr = true
+        if(args.opt_arg.exons){
+            if(args.opt_arg.ss->splice_site!=0) {
+                if (args.opt_arg.utrlevel == 1) targetSpliceOnly(args.opt_arg.ss,false); //no_utr=false
+                else targetSpliceOnly(args.opt_arg.ss); //no_utr = true
 
             }
 
-            if(!args.ss->splice_only){
-                if(args.utrlevel == 0) targetExons();
-                else if(args.utrlevel == 1){
+            if(!args.opt_arg.ss->splice_only){
+                if(args.opt_arg.utrlevel == 0) targetExons();
+                else if(args.opt_arg.utrlevel == 1){
                     targetExons();
                     targetUTRExons();
                 }
             }
-            else if(args.utrlevel == 2) targetUTRExons();
+            else if(args.opt_arg.utrlevel == 2) targetUTRExons();
 
         }
     }

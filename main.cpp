@@ -8,8 +8,8 @@ int main(int argc, char *argv[])
 {
     Args argh(argc, argv);
 
-    GrabExons ex(argh.database, argh.region,
-                 argh.table, argh.local);
+    GrabExons ex(argh.opt_arg.database, argh.region,
+                 argh.opt_arg.table, argh.opt_arg.local);
 
     QList<GeneHolder*> &genes = ex.genes;
     cerr << argh.region.toStdString() << "\t#Exons: " << ex.genes.length() << endl;
