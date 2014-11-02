@@ -42,7 +42,7 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
                      << gene_name
                      << "|5'_PROMOTER_" << margin_us << "bp_UPSTREAM"
                      << (flag_q_txS?SWAPPED:"") << flush;
-                gh->printDetails(scores,direction); cout << endl;
+                gh->printDetails(); cout << endl;
             }
 
             //After, still 5'-->3'
@@ -52,7 +52,7 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
                  << gene_name
                  << "|5'PROMOTER_" << margin_ds << "bp_DOWNSTREAM"
                  << (flag_q_txS?SWAPPED:"") << flush;
-                gh->printDetails(scores,direction); cout << endl;
+                gh->printDetails(); cout << endl;
 
             }
         }
@@ -67,7 +67,7 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
                      << gene_name
                      << "|3'_PROMOTER_" << margin_us << "bp_UPSTREAM"
                      << (flag_q_txS?SWAPPED:"") << flush;
-                gh->printDetails(scores,direction); cout << endl;
+                gh->printDetails(); cout << endl;
             }
 
             //After, still 3' <-- 5'
@@ -77,15 +77,15 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
                  << gene_name
                  << "|3'PROMOTER_" << margin_ds << "bp_DOWNSTREAM"
                  << (flag_q_txS?SWAPPED:"") << flush;
-                gh->printDetails(scores,direction); cout << endl;
+                gh->printDetails(); cout << endl;
             }
         }
     }
 }
 
 
-void Targeter::printExtras(GeneHolder *&gh, short frame){
-    gh->printDetails(this->scores, this->direction);
+void inline Targeter::printExtras(GeneHolder *&gh, short frame){
+    gh->printDetails();
 
     // -99 is null
     if (this->frames) cout << '\t' << frame << flush;
@@ -251,6 +251,7 @@ void Targeter::targetSpliceOnly(Splice *ss, bool no_utr)
         GeneHolder *gh = genes.at(i);
         string chrom = gh->chrom.toStdString();
         string gene_name = gh->gene_name.toStdString();
+
 
         for(int j=0; j < gh->exons.length(); j ++)
         {

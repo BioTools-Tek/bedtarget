@@ -17,10 +17,9 @@ public:
     QList<GeneHolder*> genelist;
     bool scores, frames, direction;
 
-
-
     Targeter(QList<GeneHolder*> &genelist, Args &args)
     {
+
         this->genelist = genelist;
         this->scores = args.opt_arg.scores;
         this->frames = args.opt_arg.exonframes;
@@ -35,8 +34,7 @@ public:
         if(args.opt_arg.introns) targetIntrons(args.opt_arg.ss);
 
 
-        if(args.opt_arg.genes){
-
+        if(args.genes){
             if(args.opt_arg.utrlevel == 0) targetGenes(args.opt_arg.codingonly);
             else if(args.opt_arg.utrlevel == 1) {
                 targetGenes(args.opt_arg.codingonly);
@@ -45,11 +43,12 @@ public:
             else if(args.opt_arg.utrlevel == 2) targetUTRRegions();
         }
 
-        if(args.opt_arg.exons){
+        if(args.exons){
             if(args.opt_arg.ss->splice_site!=0) {
-                if (args.opt_arg.utrlevel == 1) targetSpliceOnly(args.opt_arg.ss,false); //no_utr=false
-                else targetSpliceOnly(args.opt_arg.ss); //no_utr = true
-
+                targetSpliceOnly(args.opt_arg.ss, !(args.opt_arg.utrlevel==1));
+                // last argument
+                //no_utr = false
+                //no_utr = true
             }
 
             if(!args.opt_arg.ss->splice_only){

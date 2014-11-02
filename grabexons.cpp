@@ -28,14 +28,21 @@ QList<QString> GrabExons::retrieveFromMYSQL()
     qp->waitForFinished(900000000);
     QString all_data = qp->readAllStandardOutput();
 
-    cerr << all_data.toUtf8().data() << endl;
+#ifdef DEBUG
+   cerr << all_data.toUtf8().data() << endl;
+#endif
 
     QList<QString> tmp = all_data.split('\n');
 
+    delete qp;
     return tmp;
 }
 
 void GrabExons::makePositionMap(const QString &line){
+#ifdef DEBUG
+    cerr << "position map line=\n" << line.toUtf8().data() << endl;
+#endif
+
     QStringList tokes = line.trimmed().split('\t');
     for (int t=0; t < tokes.length(); t++) {
         position_map[tokes.at(t).trimmed()] = t;
@@ -58,11 +65,12 @@ GeneHolder *GrabExons::parseExons(const QString &lines)
          framesR = data.at(position_map["exonFrames"]).split(',');
 
     GeneHolder *gh = 0;
-    if (position_map.contains("name2"))
-        gh = new GeneHolder(data.at(position_map["name2"]).trimmed()); //Name
-    else
-        gh = new GeneHolder(data.at(position_map["name"]).trimmed()); //Name
+//    if (position_map.contains("name2"))
+        gh = new GeneHolder(data.at(position_map["name2"]).trimmed()); //Gene name
+//    else
+//      gh = new GeneHolder(data.at(position_map["name"]).trimmed()); //Unique refGene name
 
+    gh->unique_name = data.at(position_map["name"]).trimmed();
     //name	chrom	strand txStart	txEnd	cdsStart cdsEnd	exonCount	exonStarts exonEnds	proteinID	alignID
 
     //Coding region

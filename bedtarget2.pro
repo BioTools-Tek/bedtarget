@@ -10,6 +10,7 @@ QT       -= gui
 
 TARGET = bedtarget2
 CONFIG   += console
+CONFIG   += c++11
 CONFIG   -= app_bundle
 
 TEMPLATE = app
@@ -21,7 +22,6 @@ SOURCES += main.cpp \
 
 HEADERS += \
     grabexons.h \
-    printexons.h \
     targeter.h \
     Args.h \
     splice.h

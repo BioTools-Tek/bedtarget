@@ -1,7 +1,7 @@
 #ifndef GRABEXONS_H
 #define GRABEXONS_H
 
-#define DEBUG
+//#define DEBUG
 
 
 #include <QProcess>
@@ -42,11 +42,25 @@ public:
 };
 
 class GeneHolder{
-
 public:
 
-    bool direction;  // '+' '-'
+    static bool print_direction;  // '+' '-'
+    static bool print_scores;
+    static bool print_uniquenames;
+    static bool print_frames;
+
+    static void printHeader(){
+        cout << "#CHROM\tSTART\tSTOP\tGENEINFO";
+        if (print_scores) cout << "\tSCORE";
+        if (print_direction) cout << "\tDIRECT";
+        if (print_uniquenames) cout << "\tRGNAME";
+        if (print_frames) cout << "\tFRAMES";
+        cout << endl;
+    }
+
     QString chrom;
+
+    bool direction;
 
     int exonCount; //Needs to agree with size of start and stop
 
@@ -64,6 +78,7 @@ public:
 
     QList<QChar> checks;
     QString gene_name;
+    QString unique_name;
 
     short reading_frames[500]; // Genes are very unlikely to have 500 exons, enough right?
     // http://biology.stackexchange.com/questions/29/what-are-the-limiting-factors-for-gene-length-and-number-of-exons
@@ -76,7 +91,8 @@ public:
         gene_name = name;
     }
 
-    uint determineExonNumber(uint exon){
+    uint determineExonNumber(uint exon)
+    {
         if (direction) return exon;
         else {
             int index_of = exon_numbers.indexOf(exon);
@@ -90,13 +106,16 @@ public:
         exit(-1);
     }
 
+
     void debuginfo(){
         cout << " [strand=" << (direction?'+':'-') << ",txStart=" << txStart
                                                << ",txStop=" << txStop << "]" << flush;
     }
 
-    void printDetails(bool scores, bool givedirection){
-        if (scores){
+
+
+    void printDetails(){
+        if (print_scores){
             //Append Quality
             QList<QChar> &keys = checks;
             cout << '\t' << flush;
@@ -112,9 +131,9 @@ public:
                 else cout << 'W' << flush;
             }
         }
-        if (givedirection) cout << '\t' << (direction?'+':'-') << flush;
+        if (print_direction) cout << '\t' << (direction?'+':'-') << flush;
+        if (print_uniquenames) cout << '\t' << unique_name.toUtf8().data() << flush;
     }
-
 };
 
 class GrabExons{
@@ -134,7 +153,8 @@ public:
     //Chain
     GrabExons(QString database, QString region) {GrabExons(database, region, QString("refGene"));}
     GrabExons(QString database, QString region, QString table){ GrabExons(database, region, table, false);}
-    GrabExons(QString database, QString region, QString table, bool local){
+    GrabExons(QString database, QString region, QString table, bool local)
+    {
         this->database = database;
         this->table = table;
         this->local = local;
@@ -147,10 +167,22 @@ public:
 
         if (reg.length()==2){
             QStringList posit = reg.at(1).split('-');
-            if(posit.length()!=2){ cerr << "Please specify a min and max region" << endl; exit(-1);}
-            this->reg1 = posit.at(0).toInt();
-            this->reg2 = posit.at(1).toInt();
+//            if(posit.length()!=2){ cerr << "Please specify a min and max region" << endl; exit(-1);}
+
+            bool rgb;
+            this->reg1 = posit.at(0).toInt(&rgb);
+            if (!rgb) cerr << "Please specify a start region for " << region.toUtf8().data() << endl; exit(-1);
+
+            if (posit.size()==2){
+                this->reg2 = posit.at(1).toInt(&rgb);
+                if (!rgb) cerr << "Please specify a proper region for " << region.toUtf8().data() << endl; exit(-1);
+            }
+            else{ //assume end is max
+                this->reg2 = 1 << 31;
+            }
         }
+
+
 
         QList<QString> data = retrieveFromMYSQL();
 
@@ -164,7 +196,17 @@ public:
 
             GeneHolder *toast = parseExons(line);
             if (toast->chrom!="0") genes.append(toast);
+
+            // IDIOT! Don't delete the pointer, that's what you're storing! --> Destructor
+            //delete toast;
         }
+    }
+
+    ~GrabExons(){
+//        cerr << "Deleting pointers.. " << endl;
+        for (GeneHolder *gh : genes) delete gh;
+        genes.clear();
+        chromemap.clear();
     }
 
     QList<QString> retrieveFromMYSQL();

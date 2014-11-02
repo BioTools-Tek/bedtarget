@@ -7,7 +7,7 @@
 class PrintExons
 {
 public:
-    PrintExons(QList<GeneHolder *> &genes, bool &exons, bool &introns, bool &utr, bool &intergenic, Splice *splice){
+    PrintExons(QList<GeneHolder *> &genes, bool &exons, bool &introns, bool &utr, bool &intergenic, Splice *splice, bool &unique_names){
         uint last_genepos = 0; //Intergenic position holder
 
         for (int i=0; i < genes.size(); i++)
@@ -91,7 +91,6 @@ public:
 
             //Store last gene position
             last_genepos = gh->txStop;
-
         }
     }
 };
