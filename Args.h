@@ -1,7 +1,7 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#define VERSION "2.01a"
+#define VERSION "2.02"
 
 #include <QString>
 #include <iostream>
@@ -142,6 +142,7 @@ struct Args {
         cerr << "Splice[adom]=" << opt_arg.ss->acceptor_sites << " "
              << opt_arg.ss->donor_sites << " " << opt_arg.ss->splice_only
              << " " << opt_arg.ss->splice_site << endl;
+//        exit(-1);
     }
 
 
@@ -219,6 +220,7 @@ struct Args {
 
         QStringList original_region_list = region.split(',');
 
+
         for (QString region : original_region_list)
         {
             if (region==ARG_AUTOSOMES) region="chr1-22";
@@ -249,12 +251,17 @@ struct Args {
                         //                        delete small_big;
                         continue;
                     }
+                    else { // Just a single chromosome
+                        region_list.append(QString("chr").append(region));
+                        continue;
+                    }
                 }
             }
             else assert("Invalid region, start with 'chr' at least");
 
             // Made it this far, append
             region_list.append(region);
+
         }
     }
 

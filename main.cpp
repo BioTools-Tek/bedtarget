@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     GeneHolder::printHeader();
 
-    //Handle Data
+       //Handle Data
     for (QString region : argh.region_list)
     {
         GrabExons ex(argh.opt_arg.database, region,
