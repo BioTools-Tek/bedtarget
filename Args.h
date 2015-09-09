@@ -1,7 +1,7 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#define VERSION "2.02"
+#define VERSION "2.03"
 
 #include <QString>
 #include <iostream>
@@ -117,34 +117,13 @@ struct Args {
             if(!r1b) assert("Please give a valid number for the end of the range, e.g. chr1-22, or chr1:2-123456");
             if (second <= first) assert("End of range cannot be smaller than start of range!");
         }
-        else if (r1_r2.size()>2) assert("Please give a single range, no extra hypens '-'");
+        else if (r1_r2.size()>2) assert("Please give a single range, no extra hyphens '-'");
 
         if (second==-1) second=22;
 
         int arr [2] = {first, second};
         return arr;
     }
-
-
-    void debug(){
-        cerr << "regions="; for (QString region : region_list) cerr << region.toUtf8().data() << ",";
-        cerr << endl;
-        cerr << "genes=" << genes << ", exons=" << exons << endl;
-        cerr << "\nOpts:" << endl;
-        cerr << "db=" << opt_arg.database.toUtf8().data()
-             << ", table=" << opt_arg.table.toUtf8().data() << ", local=" << opt_arg.local << endl;
-        cerr << "codingonly=" << opt_arg.codingonly << ", introns=" << opt_arg.introns
-             << ", intergenic=" << opt_arg.intergenic << ", scores=" << opt_arg.scores
-             << ", exonframes=" << opt_arg.exonframes << ", direct=" << opt_arg.direction
-             << ", unique_names=" << opt_arg.unique_isoform_names << endl;
-        cerr << "promoterU=" << opt_arg.promoter_margin_upstream << ", D=" << opt_arg.promoter_margin_downstream << endl;
-        cerr << "UTR=" << opt_arg.utrlevel << endl;
-        cerr << "Splice[adom]=" << opt_arg.ss->acceptor_sites << " "
-             << opt_arg.ss->donor_sites << " " << opt_arg.ss->splice_only
-             << " " << opt_arg.ss->splice_site << endl;
-//        exit(-1);
-    }
-
 
     void usage(char * prog)
     {
@@ -174,6 +153,9 @@ struct Args {
                 "  --%s\tor -%s\n"
                 "\n"
                 "GENE OPTIONS:\n"
+                "  --%s\tor -%s,\n\t(Default switch: shortcut for\n"
+                "         --splice 5 --utr --scores --frames\n"
+                "         --direction --refseq-gene-names)\n\n"
                 "  --%s\tor -%s\n"
                 "  --%s\tor -%s, (REMOVES ALL OTHER FLAGS)\n"
                 "  --%s\tor -%s\n"
@@ -187,15 +169,13 @@ struct Args {
                 "  --%s\tor -%s\n"
                 "  --%s\tor -%s\n"
                 "  --%s\tor -%s\n"
-                "  --%s\tor -%s\n"
-                "  --%s\tor -%s,\n\t(Default switch: shortcut for\n"
-                "         --exons --splice 5 --utr --scores\n"
-                "         --frames --direction --refseq-gene-names)\n",
+                "  --%s\tor -%s\n",
                 VERSION, prog,
                 ARG_AUTOSOMES,
                 ARG_DATABASE, "b",
                 ARG_TABLE, "t", ARG_LOCAL, "l",
 
+                ARG_STANDARD, "x",
                 ARG_UTR, "u", ARG_UTRONLY, "U",
                 ARG_NONCODING, "N",
                 ARG_PROMOTERS, "p",
@@ -205,8 +185,7 @@ struct Args {
                 ARG_SCORES, "k",
                 ARG_FRAMES, "f",
                 ARG_DIRECTION, "d",
-                ARG_REFSEQGENE, "q",
-                ARG_STANDARD, "x"
+                ARG_REFSEQGENE, "q"
                 );
         exit(-1);
     }
@@ -360,11 +339,11 @@ struct Args {
                 break;
 
             case 'x':
-                //                exons,scores,frames,directions,utr,splice 5
-                exons =\
-                        opt_arg.scores=\
-                        opt_arg.exonframes =\
-                        opt_arg.direction = true;
+                //                scores,frames,directions,utr,splice 5
+//                exons = true;
+                opt_arg.scores= true;
+                opt_arg.exonframes = true;
+                opt_arg.direction = true;
 
                 opt_arg.unique_isoform_names = true;
                 utrtoo = true;
@@ -422,8 +401,30 @@ struct Args {
 
         //        delete optarg;
 
-        //debug();
+//        debug();
     }
+
+
+    void debug(){
+        cerr << "regions="; for (QString region : region_list) cerr << region.toUtf8().data() << ",";
+        cerr << endl;
+        cerr << "genes=" << genes << ", exons=" << exons << endl;
+        cerr << "\nOpts:" << endl;
+        cerr << "db=" << opt_arg.database.toUtf8().data()
+             << ", table=" << opt_arg.table.toUtf8().data() << ", local=" << opt_arg.local << endl;
+        cerr << "codingonly=" << opt_arg.codingonly << ", introns=" << opt_arg.introns
+             << ", intergenic=" << opt_arg.intergenic << ", scores=" << opt_arg.scores
+             << ", exonframes=" << opt_arg.exonframes << ", direct=" << opt_arg.direction
+             << ", unique_names=" << opt_arg.unique_isoform_names << endl;
+        cerr << "promoterU=" << opt_arg.promoter_margin_upstream << ", D=" << opt_arg.promoter_margin_downstream << endl;
+        cerr << "UTR=" << opt_arg.utrlevel << endl;
+        cerr << "Splice[acc don only marg]=" << opt_arg.ss->acceptor_sites << " "
+             << opt_arg.ss->donor_sites << " " << opt_arg.ss->splice_only
+             << " " << opt_arg.ss->splice_site << endl;
+//        exit(-1);
+    }
+
+
 
 };
 

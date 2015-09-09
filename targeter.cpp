@@ -258,7 +258,11 @@ void Targeter::targetSpliceOnly(Splice *ss, bool no_utr)
             ExonHolder *ex = gh->exons.at(j);
 
             // If dont print utr, and exon is not utr, skip.. wat
-            if (no_utr && ex->utr!=-1) continue;
+//            if (no_utr && ex->utr!=-1) continue;
+
+            if (ex->utr != -1) continue; // No splice sites on Exons that are only UTR
+
+
  //         if (ex->utr==-1)
  //         {
 
@@ -305,32 +309,51 @@ void Targeter::targetSpliceOnly(Splice *ss, bool no_utr)
             else if (ex->utr==3) utr_mention = QString('_').append(UTR3);
 
 
+
+
             if(gh->direction){
+//                cerr << gene_name << "|" << Exn << gh->determineExonNumber(ex->exon) << "--" << ex->exon << "/" << j << endl;
+
                 if(ss->donor_sites){
-                    cout << chrom << '\t'
-                         << splice1_start << '\t' << splice1_end << '\t'
-                         << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh, ex->frame);
+                    if (splice1_start != splice1_end){ // Only process non-UTR boundary splice sites
+
+                        cout << chrom << '\t'
+                             << splice1_start << '\t' << splice1_end << '\t'
+                             << gene_name << '|'
+                             << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh, ex->frame);
+                    }
                 }
                 if(ss->acceptor_sites){
-                    cout << chrom << '\t'
-                         << splice2_start << '\t' << splice2_end << '\t'
-                         << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh, ex->frame);
+                    if (splice2_start != splice2_end){ // Only process non-UTR boundary splice sites
+
+                        cout << chrom << '\t'
+                             << splice2_start << '\t' << splice2_end << '\t'
+                             << gene_name << '|'
+                             << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh, ex->frame);
+
+                    }
                 }
             }
             else{
+//                cerr << gene_name << "|" << Exn << gh->determineExonNumber(ex->exon) <<  utr_mention.toUtf8().data() << '_' << "--" << ex->exon << "/" << j << endl;
+
                 if(ss->acceptor_sites){
-                    cout << chrom << '\t'
-                         << splice1_start << '\t' << splice1_end << '\t'
-                         << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh, ex->frame);
+                    if (splice2_start != splice2_end){ // Only process non-UTR boundary splice sites
+
+                        cout << chrom << '\t'
+                             << splice2_start << '\t' << splice2_end << '\t'
+                             << gene_name << '|'
+                             << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << AccSpl << flush; printExtras(gh, ex->frame);
+                    }
                 }
                 if(ss->donor_sites){
-                    cout << chrom << '\t'
-                         << splice2_start << '\t' << splice2_end << '\t'
-                         << gene_name << '|'
-                         << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh, ex->frame);
+                    if (splice1_start != splice1_end){ // Only process non-UTR boundary splice sites
+
+                        cout << chrom << '\t'
+                             << splice1_start << '\t' << splice1_end << '\t'
+                             << gene_name << '|'
+                             << Exn << gh->determineExonNumber(ex->exon) << utr_mention.toUtf8().data() << '_' << DonSpl << flush; printExtras(gh, ex->frame);
+                    }
                 }
             }
         }

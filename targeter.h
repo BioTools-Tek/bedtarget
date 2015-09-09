@@ -44,6 +44,8 @@ public:
         }
 
         if(args.exons){
+
+            // Include splice sites if non-zero splice margins set
             if(args.opt_arg.ss->splice_site!=0) {
                 targetSpliceOnly(args.opt_arg.ss, !(args.opt_arg.utrlevel==1));
                 // last argument
@@ -51,6 +53,8 @@ public:
                 //no_utr = true
             }
 
+
+            // Also...
             if(!args.opt_arg.ss->splice_only){
                 if(args.opt_arg.utrlevel == 0) targetExons();
                 else if(args.opt_arg.utrlevel == 1){
