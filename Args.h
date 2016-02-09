@@ -1,7 +1,7 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#define VERSION "2.03"
+#define VERSION "2.06"
 
 #include <QString>
 #include <iostream>
@@ -103,9 +103,11 @@ struct Args {
 
 
 
-    inline int * region_num_check(QString nums)
+    QList<int> region_num_check(QString nums)
     {
         QStringList r1_r2 = nums.split('-');
+
+
         int first=-1,second=-1;
         bool r1b;
 
@@ -121,8 +123,7 @@ struct Args {
 
         if (second==-1) second=22;
 
-        int arr [2] = {first, second};
-        return arr;
+        return QList<int> ({first, second});
     }
 
     void usage(char * prog)
@@ -195,13 +196,15 @@ struct Args {
     void handleRegionArg(char * reg, char * prog)
     {
         QString region = reg;
+
+        // Catch help text here
         if (region.startsWith("--" ARG_HELP)) help(prog);
 
         QStringList original_region_list = region.split(',');
 
-
         for (QString region : original_region_list)
         {
+
             if (region==ARG_AUTOSOMES) region="chr1-22";
 
             if (region.startsWith("chr"))
@@ -215,14 +218,14 @@ struct Args {
                     else assert("Please give a valid region: chr1:12345-, or chr2:145-19901, etc");
                 }
                 else { //No ':', single chrom (entire) or chrom range
+
                     region = region.split("hr").last();
 
                     if (region.contains('-')){
-                        int * small_big = region_num_check(region);
+                        QList<int> small_big = region_num_check(region);
 
                         int small_chrom = small_big[0];
                         int big_chrom = small_big[1];
-
 
                         for (int i=small_chrom; i <= big_chrom; i++)
                             region_list.append(QString("chr").append(QString::number(i)));
