@@ -1,12 +1,9 @@
 #include "grabexons.h"
 
-
 QList<QString> GrabExons::retrieveFromMYSQL()
 {
     //Make command string
-    QString command;
-    if (local) command = QString("mysql -uroot -peggwax -A --execute=\"SELECT * FROM ");
-    else command = QString("mysql --user=genome --host=genome-mysql.cse.ucsc.edu -A --execute=\"SELECT * FROM ");
+    QString command = "SELECT * FROM ";
 
     command.append(database).append('.').append(table)
             .append(" WHERE ")
@@ -15,26 +12,11 @@ QList<QString> GrabExons::retrieveFromMYSQL()
 
     if(reg1!=-1 && reg2!=-1) command.append(" AND cdsStart BETWEEN ").append(QString::number(reg1)).append(" AND ").append(QString::number(reg2)).append(' ');
     else command.append(' ');
-    command.append("ORDER BY cdsStart;\"");
+    command.append("ORDER BY cdsStart;");
 
-    //Process and get output
-    QProcess *qp = new QProcess; //Not a child process.
-
-#ifdef DEBUG
-    cerr << command.toUtf8().data() << endl;
-#endif
-
-    qp->start(command);
-    qp->waitForFinished(900000000);
-    QString all_data = qp->readAllStandardOutput();
-
-#ifdef DEBUG
-   cerr << all_data.toUtf8().data() << endl;
-#endif
+    QString all_data = MySQL::retrieveMYSQLResult(command);
 
     QList<QString> tmp = all_data.split('\n');
-
-    delete qp;
     return tmp;
 }
 

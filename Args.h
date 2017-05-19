@@ -1,7 +1,7 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#define VERSION "2.06"
+#define VERSION "2.1_20170519.3"
 
 #include <QString>
 #include <iostream>
@@ -312,8 +312,8 @@ struct Args {
 
             case 'p':
                 bool conv1, conv2;
-                opt_arg.promoter_margin_downstream = QString(argv[option_index+1]).toShort(&conv1);
-                opt_arg.promoter_margin_upstream = QString(argv[option_index+2]).toShort(&conv2);
+                opt_arg.promoter_margin_downstream = QString(argv[optind-1]).toShort(&conv1);
+                opt_arg.promoter_margin_upstream = QString(argv[optind]).toShort(&conv2);
 
                 if (not (conv1 || conv2)){
                     cerr << "Give downsream and upstream promoter values. Default is 5000 and 0." << endl;

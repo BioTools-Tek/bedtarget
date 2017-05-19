@@ -85,6 +85,7 @@ public:
     void targetUTRRegions();                  //'
     void targetSpliceOnly(Splice *ss, bool no_utr=true);        //'
     void targetSpliceUTR(Splice *ss);         //'
+    void targetTranscriptStartSites();        // ~
     void targetPromoters(short margin_us, short margin_ds);
 
     //Other jobs

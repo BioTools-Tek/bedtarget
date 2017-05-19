@@ -2,6 +2,13 @@
 
 #define SWAPPED "[SWAPPED]"
 
+
+void Targeter::targetTranscriptStartSites(){
+
+    MySQL::retrieveMYSQLResult("");
+}
+
+
 void Targeter::targetPromoters(short margin_us, short margin_ds){
     QList<GeneHolder*> &genes = this->genelist;
 
@@ -9,8 +16,6 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
     for (int i=0; i< gen_size; i++)
     {
         GeneHolder *gh = genes.at(i);
-        uint txStart = gh->txStart;
-
         bool direct = gh->direction;
 
         // Promoters are found before transcription starts (in 5' or 3'), but UCSC does not list these
@@ -21,37 +26,41 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
         // value as the txStart, regardless of orientation.
         // Need to flag these.
 
-        bool flag_q_txS = false;
-        if ((direct) && (gh->txStart > gh->txStop)) flag_q_txS = true;
-        if ((!direct) && (gh->txStart < gh->txStop)){
-            flag_q_txS = true;
-            txStart = gh->txStop; // txStart is 3' end!
-        }
-
         string chrom = gh->chrom.toStdString();
         string gene_name = gh->gene_name.toStdString();
 
 
+        uint txSmall = gh->txStart;
+        uint txBig  = gh->txStop;
+
+        if (gh->txStop < gh->txStart){
+            txBig   = gh->txStart;
+            txSmall = gh->txStop;
+        }
+
+
+        //  Promoter definition
+        //  <----------|---------->
+        //    A promoter is just a region spanning the txSTART site.
+
         // 5' --> 3'
-        if(direct){
+        if(direct){                   
             //Region before
             if (margin_us!=-1){
-                uint txStart_before = txStart - margin_us;
+                uint txStart_before = txSmall - margin_us;
                 cout << chrom << '\t'
-                     << txStart_before << '\t' << txStart << '\t'
+                     << txStart_before << '\t' << txSmall << '\t'
                      << gene_name
-                     << "|5'_PROMOTER_" << margin_us << "bp_UPSTREAM"
-                     << (flag_q_txS?SWAPPED:"") << flush;
+                     << "|Promoter_" << margin_us << "upstream" << flush;
                 gh->printDetails(); cout << endl;
             }
 
-            //After, still 5'-->3'
+            //Region After
             if(margin_ds!=-1){
-                uint txStart_after = txStart + margin_ds;
-                cout << chrom << '\t' << txStart << '\t' << txStart_after << '\t'
+                uint txStop_after = txSmall + margin_ds;
+                cout << chrom << '\t' << (txSmall + 1) << '\t' << txStop_after << '\t'
                  << gene_name
-                 << "|5'PROMOTER_" << margin_ds << "bp_DOWNSTREAM"
-                 << (flag_q_txS?SWAPPED:"") << flush;
+                 << "|Promoter_" << margin_ds << "downstream" << flush;
                 gh->printDetails(); cout << endl;
 
             }
@@ -59,24 +68,22 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
 
         // 3' --> 5'
         else {
-            //Region before
-            if (margin_us!=-1){
-                uint txStart_before = txStart + margin_ds;
-                cout << chrom << '\t'
-                     << txStart << '\t' << txStart_before << '\t'
+
+            if (margin_us!=-1){  // upstream is to the right
+                uint txRevStart = txBig + margin_us + 1;
+
+                cout << chrom << '\t' << (txBig+1) << '\t' << txRevStart << '\t'
                      << gene_name
-                     << "|3'_PROMOTER_" << margin_us << "bp_UPSTREAM"
-                     << (flag_q_txS?SWAPPED:"") << flush;
+                     << "|Promoter_" << margin_us << "upstream" << flush;
+                     //<< (flag_q_txS?SWAPPED:"") << flush;
                 gh->printDetails(); cout << endl;
             }
 
-            //After, still 3' <-- 5'
-            if(margin_ds!=-1){
-                uint txStart_after = txStart - margin_ds;
-                cout << chrom << '\t' << txStart_after  << '\t' << txStart << '\t'
+            if(margin_ds!=-1){  // downstream is to the left
+                uint txRevStop = txBig - margin_ds;
+                cout << chrom << '\t' << (txRevStop+1) << '\t' << txBig << '\t'
                  << gene_name
-                 << "|3'PROMOTER_" << margin_ds << "bp_DOWNSTREAM"
-                 << (flag_q_txS?SWAPPED:"") << flush;
+                 << "|Promoter_" << margin_ds << "downstream" << flush;
                 gh->printDetails(); cout << endl;
             }
         }
@@ -368,9 +375,6 @@ void Targeter::targetIntrons(Splice *ss)
     int gen_size = genes.size();
     for (int i=0; i< gen_size; i++)
     {
-
-        uint last_exonpos = 0;
-
         GeneHolder *gh = genes.at(i);
         string chrom = gh->chrom.toStdString();
         string gene_name = gh->gene_name.toStdString();
@@ -379,21 +383,38 @@ void Targeter::targetIntrons(Splice *ss)
         {
             ExonHolder *ex = gh->exons.at(j);
 
-            uint splice1_start = ex->start;
-            uint splice2_end = ex->stop;
-
-            if (!(ex->start==gh->cdsStart)) splice1_start -= ss->splice_site;
-            if (!(ex->stop==gh->cdsStop)) splice2_end += ss->splice_site;
-
-            if(j==0) {
-                last_exonpos = splice2_end;
+            // out of bounds left
+            if (ex->stop <= gh->txStart){
                 continue;
             }
 
+            //out of bounds right
+            if (ex->start >= gh->txStop){
+                break;
+            }
+
+            // always skip first exon, only want end position
+            if (j == 0) {
+                continue;
+            }
+
+            uint left = gh->exons.at(j-1)->stop; // last exon pos
+            uint right = ex->start;
+
+            if (left == right){
+                continue;
+            }
+
+            // If using splice sites in same map, then adjust margins
+            if (ss->donor_sites){    left  += ss->splice_site;}
+            if (ss->acceptor_sites){ right -= ss->splice_site;}
+
+
             cout << chrom << '\t'
-                 << last_exonpos << '\t' << splice1_start << '\t'
+                 << left << '\t' << right << '\t'
                  << gene_name << '|'
-                 << Itr << (gh->determineExonNumber(ex->exon)-1) << flush; printExtras(gh, ex->frame);
+                 << Itr << (gh->determineExonNumber(ex->exon) - 1) << flush; printExtras(gh, ex->frame);
+
         }
     }
 }
