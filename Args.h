@@ -1,7 +1,7 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#define VERSION "2.1_20170519.3"
+#define VERSION "2.4_20170521"
 
 #include <QString>
 #include <iostream>

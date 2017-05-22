@@ -29,7 +29,6 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
         string chrom = gh->chrom.toStdString();
         string gene_name = gh->gene_name.toStdString();
 
-
         uint txSmall = gh->txStart;
         uint txBig  = gh->txStop;
 
@@ -44,7 +43,7 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
         //    A promoter is just a region spanning the txSTART site.
 
         // 5' --> 3'
-        if(direct){                   
+        if(direct){
             //Region before
             if (margin_us!=-1){
                 uint txStart_before = txSmall - margin_us;
@@ -52,16 +51,16 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
                      << txStart_before << '\t' << txSmall << '\t'
                      << gene_name
                      << "|Promoter_" << margin_us << "upstream" << flush;
-                gh->printDetails(); cout << endl;
+                printExtras(gh, -1);
             }
 
             //Region After
             if(margin_ds!=-1){
                 uint txStop_after = txSmall + margin_ds;
                 cout << chrom << '\t' << (txSmall + 1) << '\t' << txStop_after << '\t'
-                 << gene_name
-                 << "|Promoter_" << margin_ds << "downstream" << flush;
-                gh->printDetails(); cout << endl;
+                     << gene_name
+                     << "|Promoter_" << margin_ds << "dnstream" << flush;
+                printExtras(gh, -1);
 
             }
         }
@@ -75,16 +74,16 @@ void Targeter::targetPromoters(short margin_us, short margin_ds){
                 cout << chrom << '\t' << (txBig+1) << '\t' << txRevStart << '\t'
                      << gene_name
                      << "|Promoter_" << margin_us << "upstream" << flush;
-                     //<< (flag_q_txS?SWAPPED:"") << flush;
-                gh->printDetails(); cout << endl;
+                //<< (flag_q_txS?SWAPPED:"") << flush;
+                printExtras(gh, -1);
             }
 
             if(margin_ds!=-1){  // downstream is to the left
                 uint txRevStop = txBig - margin_ds;
                 cout << chrom << '\t' << (txRevStop+1) << '\t' << txBig << '\t'
-                 << gene_name
-                 << "|Promoter_" << margin_ds << "downstream" << flush;
-                gh->printDetails(); cout << endl;
+                     << gene_name
+                     << "|Promoter_" << margin_ds << "dnstream" << flush;
+                printExtras(gh, -1);
             }
         }
     }
@@ -95,7 +94,7 @@ void inline Targeter::printExtras(GeneHolder *&gh, short frame){
     gh->printDetails();
 
     // -99 is null
-    if (this->frames) cout << '\t' << frame << flush;
+    if (this->frames){cout << '\t' << frame << flush;}
     cout << endl;
 }
 
