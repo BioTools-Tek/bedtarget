@@ -9,6 +9,11 @@ void Targeter::targetTranscriptStartSites(){
 }
 
 
+void Targeter::targetTFBS(){
+
+}
+
+
 void Targeter::targetPromoters(short margin_us, short margin_ds){
     QList<GeneHolder*> &genes = this->genelist;
 

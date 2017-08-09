@@ -86,7 +86,8 @@ public:
     void targetSpliceOnly(Splice *ss, bool no_utr=true);        //'
     void targetSpliceUTR(Splice *ss);         //'
     void targetTranscriptStartSites();        // ~
-    void targetPromoters(short margin_us, short margin_ds);
+    void targetPromoters(short margin_us, short margin_ds); //^
+    void targetTFBS(); // ~
 
     //Other jobs
     void sortedList();

@@ -24,4 +24,5 @@ HEADERS += \
     grabexons.h \
     targeter.h \
     Args.h \
-    splice.h
+    splice.h \
+    mysql.h
